@@ -4,13 +4,13 @@ default_random_engine gen(42);
 uniform_real_distribution<double> dis(-1.0, 1.0);
 
 
-vector<Value> Module::parameters() {
-	return {};
-}
-void Module::zero_grad() {
-	for (Value p : parameters()) p.grad = 0;
+Neuron::Neuron(const Neuron& other) {
+	w = other.w;
+	b = other.b;
+	m_nonlin = other.m_nonlin;
 }
 
+Neuron::Neuron() {}
 
 Neuron::Neuron(int nin, bool nonlin) {
 	for (int i = 0; i < nin; ++i) {
@@ -31,10 +31,10 @@ Value Neuron::operator()(Vec& x) {
 	return m_nonlin ? act.relu() : act;
 }
 
-vector<Value> Neuron::parameters() {
-	vector<Value> params;
-	for (Value& v : w) params.push_back(v);
-	params.push_back(b);
+vector<Value*> Neuron::parameters() {
+	vector<Value*> params;
+	for (Value& v : w) params.push_back(&v);
+	params.push_back(&b);
 	return params;
 }
 
@@ -51,15 +51,16 @@ Layer::Layer(int nin, int nout) {
 Vec Layer::operator()(Vec& x) {
 	Vec out;
 	for (int i = 0; i < neurons.size(); ++i) {
-		out.push_back(neurons[i](x));
+		Value n = neurons[i](x);
+		out.push_back(n);
 	}
 	return out;
 }
 
-vector<Value> Layer::parameters() {
-	vector<Value> params;
+vector<Value*> Layer::parameters() {
+	vector<Value*> params;
 	for (Neuron& n : neurons) {
-		for (Value& v : n.parameters()) {
+		for (Value* v : n.parameters()) {
 			params.push_back(v);
 		}
 	}
@@ -77,17 +78,17 @@ MLP::MLP(const vector<int>& lay_siz) {
 	}
 }
 
-Vec MLP::operator()(Vec x) {
+Vec MLP::operator()(Vec& x) {
 	for (auto layer : layers) {
 		x = layer(x);
 	}
 	return x;
 }
 
-vector<Value> MLP::parameters() {
-	vector<Value> params;
+vector<Value*> MLP::parameters() {
+	vector<Value*> params;
 	for (Layer& layer : layers) {
-		for (Value& v : layer.parameters()) {
+		for (Value* v : layer.parameters()) {
 			params.push_back(v);
 		}
 	}

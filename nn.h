@@ -17,8 +17,10 @@ public:
 	Value b;
 	bool m_nonlin;
 	Neuron(int nin, bool nonlin = true);
+	Neuron(const Neuron& other);
+	Neuron();
 	Value operator()(Vec& x);
-	vector<Value> parameters();
+	vector<Value*> parameters();
 };
 
 
@@ -27,7 +29,7 @@ public:
 	vector<Neuron> neurons;
 	Layer(int nin, int nout);
 	Vec operator()(Vec& x);
-	vector<Value> parameters();
+	vector<Value*> parameters();
 };
 
 
@@ -35,8 +37,8 @@ class MLP : public Module {
 public:
 	vector<Layer> layers;
 	MLP(const vector<int>& lay_siz);
-	Vec operator()(Vec x);
-	vector<Value> parameters();
+	Vec operator()(Vec& x);
+	vector<Value*> parameters();
 };
 
 ostream& operator<<(std::ostream& os, Neuron& n);
