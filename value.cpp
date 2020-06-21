@@ -22,7 +22,6 @@ Value::Value() {
 Value Value::operator=(const Value& other) {
 	auto* ptr = this;
 	copyValue(&ptr, &other);
-	copyValue(&ptr, &other);
 	return *this;
 }
 

@@ -3,7 +3,7 @@
 #include <random>
 #include "value.h"
 
-typedef vector<Value> Vec;
+typedef vector<Value*> Vec;
 
 class Module {
 	vector<Value> parameters();
@@ -19,25 +19,25 @@ public:
 	Neuron(int nin, bool nonlin = true);
 	Neuron(const Neuron& other);
 	Neuron();
-	Value operator()(Vec& x);
+	Value* operator()(Vec& x);
 	vector<Value*> parameters();
 };
 
 
 class Layer : public Module {
 public:
-	vector<Neuron> neurons;
+	vector<Neuron*> neurons;
 	Layer(int nin, int nout);
-	Vec operator()(Vec& x);
+	Vec* operator()(Vec& x);
 	vector<Value*> parameters();
 };
 
 
 class MLP : public Module {
 public:
-	vector<Layer> layers;
+	vector<Layer*> layers;
 	MLP(const vector<int>& lay_siz);
-	Vec operator()(Vec& x);
+	Vec* operator()(Vec& x);
 	vector<Value*> parameters();
 };
 

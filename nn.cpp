@@ -14,26 +14,29 @@ Neuron::Neuron() {}
 
 Neuron::Neuron(int nin, bool nonlin) {
 	for (int i = 0; i < nin; ++i) {
-		w.push_back(Value(dis(gen)));
+		w.push_back(&Value(dis(gen)));
 	}
 	b = Value(0);
 	m_nonlin = nonlin;
 }
 
-Value Neuron::operator()(Vec& x) {
-	Value act(0);
+Value* Neuron::operator()(Vec& x) {
+	Value act(0), act_relu(0);
 	for (int i = 0; i < x.size(); ++i) {
-		Value sum = w[i] * x[i];
+		Value sum = (*w[i]) * (*x[i]);
 		Value old_act = act;
 		act = old_act + sum;
 	}
 	act = act + b;
-	return m_nonlin ? act.relu() : act;
+	if (m_nonlin) {
+		return &act.relu();
+	}
+	return &act;
 }
 
 vector<Value*> Neuron::parameters() {
 	vector<Value*> params;
-	for (Value& v : w) params.push_back(&v);
+	for (Value* v : w) params.push_back(v);
 	params.push_back(&b);
 	return params;
 }
@@ -45,22 +48,22 @@ ostream& operator<<(std::ostream& os, Neuron& n) {
 
 Layer::Layer(int nin, int nout) {
 	for (int i = 0; i < nout; ++i)
-		neurons.push_back(Neuron(nin));
+		neurons.push_back(&Neuron(nin));
 }
 
-Vec Layer::operator()(Vec& x) {
+Vec* Layer::operator()(Vec& x) {
 	Vec out;
 	for (int i = 0; i < neurons.size(); ++i) {
-		Value n = neurons[i](x);
-		out.push_back(n);
+		//Value* n = neurons[i](x);
+		out.push_back((*neurons[i])(x));
 	}
-	return out;
+	return &out;
 }
 
 vector<Value*> Layer::parameters() {
 	vector<Value*> params;
-	for (Neuron& n : neurons) {
-		for (Value* v : n.parameters()) {
+	for (Neuron* n : neurons) {
+		for (Value* v : n->parameters()) {
 			params.push_back(v);
 		}
 	}
@@ -74,21 +77,21 @@ ostream& operator<<(std::ostream& os, Layer& layer) {
 
 MLP::MLP(const vector<int>& lay_siz) {
 	for (int i = 0; i < lay_siz.size() - 1; ++i) {
-		layers.push_back(Layer(lay_siz[i], lay_siz[i + 1]));
+		layers.push_back(&Layer(lay_siz[i], lay_siz[i + 1]));
 	}
 }
 
-Vec MLP::operator()(Vec& x) {
+Vec* MLP::operator()(Vec& x) {
 	for (auto layer : layers) {
-		x = layer(x);
+		x = *(*layer)(x);
 	}
-	return x;
+	return &x;
 }
 
 vector<Value*> MLP::parameters() {
 	vector<Value*> params;
-	for (Layer& layer : layers) {
-		for (Value* v : layer.parameters()) {
+	for (Layer* layer : layers) {
+		for (Value* v : layer->parameters()) {
 			params.push_back(v);
 		}
 	}
